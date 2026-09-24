@@ -4,13 +4,21 @@ const dateInput = document.getElementById('todo-date');
 const timeInput = document.getElementById('todo-time');
 const priorityInput = document.getElementById('todo-priority');
 const categoryInput = document.getElementById('todo-category');
-const searchInput = document.getElementById('search-input'); // Novo elemento de busca
+const searchInput = document.getElementById('search-input');
 const todoList = document.getElementById('todo-list');
 const todoIdInput = document.getElementById('todo-id');
 const btnSubmit = document.getElementById('btn-submit');
 const themeToggle = document.getElementById('theme-toggle');
+const notificationToggle = document.getElementById('notification-toggle');
 const filterBtns = document.querySelectorAll('.filter-btn');
 const currentDateDisplay = document.getElementById('current-date-display');
+
+// Elementos do Dashboard
+const statTotal = document.getElementById('stat-total');
+const statCompleted = document.getElementById('stat-completed');
+const statPending = document.getElementById('stat-pending');
+const progressBar = document.getElementById('progress-bar');
+const progressText = document.getElementById('progress-text');
 
 // Elementos do Mini Calendário
 const calendarDaysEl = document.getElementById('calendar-days');
@@ -22,7 +30,6 @@ const clearDateFilterBtn = document.getElementById('clear-date-filter');
 let todos = JSON.parse(localStorage.getItem('todos')) || [];
 let currentFilter = 'all';
 let selectedDateFilter = null; 
-
 let currentDateNav = new Date();
 
 const todayStr = new Date().toISOString().split('T')[0];
@@ -34,14 +41,48 @@ if (localStorage.getItem('darkMode') === 'enabled') {
     themeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
 }
 
+if (Notification.permission === 'granted') {
+    notificationToggle.style.color = 'var(--primary-color)';
+}
+
 renderCalendar();
 renderTodos();
 
-// Alternar Dark Mode
+notificationToggle.addEventListener('click', () => {
+    if (!('Notification' in window)) {
+        alert('Este navegador não suporta notificações de desktop.');
+        return;
+    }
+    Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+            new Notification('Agenda & Tarefas', { body: 'Notificações ativadas com sucesso!' });
+            notificationToggle.style.color = 'var(--primary-color)';
+        } else {
+            alert('Permissão de notificação negada.');
+        }
+    });
+});
+
+setInterval(() => {
+    if (Notification.permission !== 'granted') return;
+    const now = new Date();
+    const currentDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    todos.forEach(todo => {
+        if (!todo.completed && todo.date === currentDateStr && todo.time === currentTimeStr && !todo.notified) {
+            new Notification('⏰ Lembrete de Compromisso', {
+                body: `Evento: "${todo.text}" (${todo.category}) está a começar!`,
+                icon: 'https://cdn-icons-png.flaticon.com/512/3236/3236949.png'
+            });
+            todo.notified = true;
+        }
+    });
+}, 30000);
+
 themeToggle.addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    if (isDark) {
+    if (document.body.classList.contains('dark-mode')) {
         localStorage.setItem('darkMode', 'enabled');
         themeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
     } else {
@@ -50,12 +91,8 @@ themeToggle.addEventListener('click', () => {
     }
 });
 
-// Evento da Barra de Pesquisa em Tempo Real
-searchInput.addEventListener('input', () => {
-    renderTodos();
-});
+searchInput.addEventListener('input', () => renderTodos());
 
-// Navegação do Mini Calendário
 prevMonthBtn.addEventListener('click', () => {
     currentDateNav.setMonth(currentDateNav.getMonth() - 1);
     renderCalendar();
@@ -74,13 +111,12 @@ clearDateFilterBtn.addEventListener('click', () => {
     renderTodos();
 });
 
-// Renderizar Mini Calendário Interativo
 function renderCalendar() {
     calendarDaysEl.innerHTML = '';
     const year = currentDateNav.getFullYear();
     const month = currentDateNav.getMonth();
-
     const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    
     monthYearDisplay.innerText = `${monthNames[month]} ${year}`;
 
     const firstDayIndex = new Date(year, month, 1).getDay();
@@ -99,22 +135,11 @@ function renderCalendar() {
         dayDiv.className = 'calendar-day';
         dayDiv.innerText = i;
 
-        const formattedMonth = String(month + 1).padStart(2, '0');
-        const formattedDay = String(i).padStart(2, '0');
-        const thisDateStr = `${year}-${formattedMonth}-${formattedDay}`;
+        const thisDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
 
-        if (thisDateStr === todayStr) {
-            dayDiv.classList.add('today');
-        }
-
-        if (thisDateStr === selectedDateFilter) {
-            dayDiv.classList.add('selected');
-        }
-
-        const hasTask = todos.some(t => t.date === thisDateStr);
-        if (hasTask) {
-            dayDiv.classList.add('has-event');
-        }
+        if (thisDateStr === todayStr) dayDiv.classList.add('today');
+        if (thisDateStr === selectedDateFilter) dayDiv.classList.add('selected');
+        if (todos.some(t => t.date === thisDateStr)) dayDiv.classList.add('has-event');
 
         dayDiv.addEventListener('click', () => {
             selectedDateFilter = thisDateStr;
@@ -128,7 +153,6 @@ function renderCalendar() {
     }
 }
 
-// Botões de Filtro de Status
 filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
         filterBtns.forEach(b => b.classList.remove('active'));
@@ -138,7 +162,6 @@ filterBtns.forEach(btn => {
     });
 });
 
-// Adicionar ou Atualizar Tarefa
 form.addEventListener('submit', (e) => {
     e.preventDefault();
 
@@ -153,24 +176,17 @@ form.addEventListener('submit', (e) => {
 
     if (id) {
         todos = todos.map(todo => {
-            if (todo.id == id) {
-                return { ...todo, text, date, time, priority, category };
-            }
+            if (todo.id == id) return { ...todo, text, date, time, priority, category, notified: false };
             return todo;
         });
         todoIdInput.value = '';
         btnSubmit.innerHTML = '<i class="fa-solid fa-plus"></i> Adicionar Evento';
     } else {
-        const newTodo = {
+        todos.push({
             id: Date.now(),
-            text,
-            date,
-            time,
-            priority,
-            category,
-            completed: false
-        };
-        todos.push(newTodo);
+            text, date, time, priority, category,
+            completed: false, notified: false
+        });
     }
 
     form.reset();
@@ -179,22 +195,39 @@ form.addEventListener('submit', (e) => {
     saveAndRender();
 });
 
-// Renderizar Tarefas (com Filtro de Pesquisa em Tempo Real)
+// NOVA FUNÇÃO: Atualiza o Dashboard dinamicamente
+function updateDashboard() {
+    let tasksToCount = todos;
+    
+    // Se o calendário estiver filtrando uma data, o dashboard mostra o progresso só desse dia
+    if (selectedDateFilter) {
+        tasksToCount = todos.filter(t => t.date === selectedDateFilter);
+    }
+
+    const total = tasksToCount.length;
+    const completed = tasksToCount.filter(t => t.completed).length;
+    const pending = total - completed;
+    const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+    statTotal.innerText = total;
+    statCompleted.innerText = completed;
+    statPending.innerText = pending;
+    
+    progressBar.style.width = `${percentage}%`;
+    progressText.innerText = `${percentage}% Concluído`;
+}
+
 function renderTodos() {
     todoList.innerHTML = '';
+    
+    // Chamamos a atualização do Dashboard antes de aplicar os filtros visuais de pesquisa
+    updateDashboard();
 
     const searchQuery = searchInput.value.toLowerCase().trim();
 
     let filteredTodos = todos.filter(todo => {
-        // Filtro por texto da barra de pesquisa
-        if (searchQuery && !todo.text.toLowerCase().includes(searchQuery)) {
-            return false;
-        }
-
-        // Filtro por data selecionada no calendário
+        if (searchQuery && !todo.text.toLowerCase().includes(searchQuery)) return false;
         if (selectedDateFilter && todo.date !== selectedDateFilter) return false;
-
-        // Filtro por status
         if (currentFilter === 'pending') return !todo.completed;
         if (currentFilter === 'completed') return todo.completed;
         return true;
@@ -225,16 +258,13 @@ function renderTodos() {
                 <button class="btn-delete" onclick="deleteTodo(${todo.id})" title="Excluir"><i class="fa-solid fa-trash"></i></button>
             </div>
         `;
-
         todoList.appendChild(li);
     });
 }
 
 function toggleComplete(id) {
     todos = todos.map(todo => {
-        if (todo.id === id) {
-            return { ...todo, completed: !todo.completed };
-        }
+        if (todo.id === id) return { ...todo, completed: !todo.completed };
         return todo;
     });
     saveAndRender();

@@ -39,6 +39,9 @@
                     <h1>Minha Agenda</h1>
                 </div>
                 <div class="header-actions">
+                    <button id="notification-toggle" title="Ativar Notificações do Navegador">
+                        <i class="fa-solid fa-bell"></i>
+                    </button>
                     <button id="theme-toggle" title="Alternar Dark Mode">
                         <i class="fa-solid fa-moon"></i>
                     </button>
@@ -86,9 +89,30 @@
                     </form>
                 </section>
 
+                <!-- NOVO: Painel de Progresso e Estatísticas -->
+                <section class="dashboard-section">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-title">Total</span>
+                            <span class="stat-value" id="stat-total">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-title">Concluídas</span>
+                            <span class="stat-value" id="stat-completed">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-title">Pendentes</span>
+                            <span class="stat-value" id="stat-pending">0</span>
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+                    </div>
+                    <span class="progress-text" id="progress-text">0% Concluído</span>
+                </section>
+
                 <!-- Listagem e Filtros -->
                 <section class="tasks-section">
-                    <!-- Nova Barra de Pesquisa -->
                     <div class="search-bar">
                         <i class="fa-solid fa-magnifying-glass"></i>
                         <input type="text" id="search-input" placeholder="Pesquisar compromissos..." autocomplete="off">
