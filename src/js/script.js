@@ -4,6 +4,7 @@ const dateInput = document.getElementById('todo-date');
 const timeInput = document.getElementById('todo-time');
 const priorityInput = document.getElementById('todo-priority');
 const categoryInput = document.getElementById('todo-category');
+const searchInput = document.getElementById('search-input'); // Novo elemento de busca
 const todoList = document.getElementById('todo-list');
 const todoIdInput = document.getElementById('todo-id');
 const btnSubmit = document.getElementById('btn-submit');
@@ -20,9 +21,8 @@ const clearDateFilterBtn = document.getElementById('clear-date-filter');
 
 let todos = JSON.parse(localStorage.getItem('todos')) || [];
 let currentFilter = 'all';
-let selectedDateFilter = null; // Guarda a data selecionada no mini calendário
+let selectedDateFilter = null; 
 
-// Controle do Calendário Visual
 let currentDateNav = new Date();
 
 const todayStr = new Date().toISOString().split('T')[0];
@@ -48,6 +48,11 @@ themeToggle.addEventListener('click', () => {
         localStorage.setItem('darkMode', 'disabled');
         themeToggle.innerHTML = '<i class="fa-solid fa-moon"></i>';
     }
+});
+
+// Evento da Barra de Pesquisa em Tempo Real
+searchInput.addEventListener('input', () => {
+    renderTodos();
 });
 
 // Navegação do Mini Calendário
@@ -82,7 +87,6 @@ function renderCalendar() {
     const totalDays = new Date(year, month + 1, 0).getDate();
     const prevTotalDays = new Date(year, month, 0).getDate();
 
-    // Dias do mês anterior
     for (let i = firstDayIndex; i > 0; i--) {
         const dayDiv = document.createElement('div');
         dayDiv.className = 'calendar-day inactive';
@@ -90,7 +94,6 @@ function renderCalendar() {
         calendarDaysEl.appendChild(dayDiv);
     }
 
-    // Dias do mês atual
     for (let i = 1; i <= totalDays; i++) {
         const dayDiv = document.createElement('div');
         dayDiv.className = 'calendar-day';
@@ -100,23 +103,19 @@ function renderCalendar() {
         const formattedDay = String(i).padStart(2, '0');
         const thisDateStr = `${year}-${formattedMonth}-${formattedDay}`;
 
-        // Verificar se é hoje
         if (thisDateStr === todayStr) {
             dayDiv.classList.add('today');
         }
 
-        // Verificar se está selecionado
         if (thisDateStr === selectedDateFilter) {
             dayDiv.classList.add('selected');
         }
 
-        // Verificar se tem tarefas agendadas neste dia
         const hasTask = todos.some(t => t.date === thisDateStr);
         if (hasTask) {
             dayDiv.classList.add('has-event');
         }
 
-        // Clique no dia do calendário para filtrar
         dayDiv.addEventListener('click', () => {
             selectedDateFilter = thisDateStr;
             clearDateFilterBtn.style.display = 'block';
@@ -129,7 +128,7 @@ function renderCalendar() {
     }
 }
 
-// Botões de Filtro (Todas, Pendentes, Concluídas)
+// Botões de Filtro de Status
 filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
         filterBtns.forEach(b => b.classList.remove('active'));
@@ -180,15 +179,22 @@ form.addEventListener('submit', (e) => {
     saveAndRender();
 });
 
-// Renderizar Tarefas
+// Renderizar Tarefas (com Filtro de Pesquisa em Tempo Real)
 function renderTodos() {
     todoList.innerHTML = '';
 
+    const searchQuery = searchInput.value.toLowerCase().trim();
+
     let filteredTodos = todos.filter(todo => {
-        // Filtro por data selecionada no calendário (se houver)
+        // Filtro por texto da barra de pesquisa
+        if (searchQuery && !todo.text.toLowerCase().includes(searchQuery)) {
+            return false;
+        }
+
+        // Filtro por data selecionada no calendário
         if (selectedDateFilter && todo.date !== selectedDateFilter) return false;
 
-        // Filtro por status (Todas, Pendentes, Concluídas)
+        // Filtro por status
         if (currentFilter === 'pending') return !todo.completed;
         if (currentFilter === 'completed') return todo.completed;
         return true;

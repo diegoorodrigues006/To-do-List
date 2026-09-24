@@ -139,7 +139,6 @@ body {
     color: white;
 }
 
-/* Indicador de evento no dia do calendário */
 .calendar-day.has-event::after {
     content: '';
     position: absolute;
@@ -204,7 +203,7 @@ body {
     padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
 }
 
 .form-section {
@@ -292,7 +291,32 @@ body {
 .tasks-section {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
+}
+
+/* Estilo da Barra de Pesquisa */
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--card-bg);
+}
+
+.search-bar i {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.search-bar input {
+    border: none;
+    background: none;
+    outline: none;
+    width: 100%;
+    color: var(--text-color);
+    font-size: 0.9rem;
 }
 
 .filters {
@@ -327,7 +351,7 @@ body {
 
 #todo-list {
     list-style: none;
-    max-height: 280px;
+    max-height: 240px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -397,7 +421,6 @@ body {
     gap: 3px;
 }
 
-/* Estilo da Tag de Categoria */
 .category-badge {
     background-color: rgba(26, 115, 232, 0.1);
     color: var(--primary-color);
