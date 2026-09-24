@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-do List | CRUD + LocalStorage</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Minha Lista de Tarefas</h1>
+
+        <!-- Formulário para Adicionar/Editar -->
+        <form id="todo-form">
+            <input type="hidden" id="todo-id">
+            <input type="text" id="todo-input" placeholder="O que você precisa fazer?" required autocomplete="off">
+            <button type="submit" id="btn-submit">Adicionar</button>
+        </form>
+
+        <!-- Lista de Tarefas -->
+        <ul id="todo-list"></ul>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
