@@ -1,120 +1,331 @@
+:root {
+    --bg-color: #f8f9fa;
+    --card-bg: #ffffff;
+    --text-color: #3c4043;
+    --text-secondary: #5f6368;
+    --border-color: #dadce0;
+    --primary-color: #1a73e8;
+    --primary-hover: #1557b0;
+    --shadow: 0 1px 3px rgba(60,64,67,0.3);
+    
+    /* Cores de Prioridade estilo GCal */
+    --priority-low: #34a853;
+    --priority-medium: #fbbc04;
+    --priority-high: #ea4335;
+}
+
+body.dark-mode {
+    --bg-color: #202124;
+    --card-bg: #292a2d;
+    --text-color: #e8eaed;
+    --text-secondary: #9aa0a6;
+    --border-color: #3c4043;
+    --primary-color: #8ab4f8;
+    --primary-hover: #aecbfa;
+    --shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Roboto', sans-serif;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
 }
 
 body {
-    background-color: #f4f7f6;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    padding: 20px;
 }
 
-.container {
-    background: #ffffff;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+.app-container {
+    background: var(--card-bg);
     width: 100%;
-    max-width: 450px;
+    max-width: 650px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-color);
 }
 
-h1 {
-    margin-bottom: 20px;
-    color: #333;
-    font-size: 1.5rem;
-    text-align: center;
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.calendar-icon {
+    font-size: 1.8rem;
+    color: var(--primary-color);
+}
+
+.app-header h1 {
+    font-size: 1.4rem;
+    font-weight: 500;
+}
+
+#theme-toggle {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+}
+
+#theme-toggle:hover {
+    background-color: rgba(150,150,150,0.1);
+    color: var(--text-color);
+}
+
+.main-content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.form-section {
+    background: rgba(26, 115, 232, 0.02);
+    border: 1px solid var(--border-color);
+    padding: 16px;
+    border-radius: 8px;
 }
 
 #todo-form {
     display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
+    flex-direction: column;
+    gap: 12px;
 }
 
-#todo-input {
-    flex: 1;
-    padding: 10px 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    outline: none;
+.input-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--card-bg);
+    color: var(--text-color);
     font-size: 1rem;
+    outline: none;
 }
 
-#todo-input:focus {
-    border-color: #4a90e2;
+.input-group input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+.datetime-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.field label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.field input, .field select {
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--card-bg);
+    color: var(--text-color);
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.field input:focus, .field select:focus {
+    border-color: var(--primary-color);
 }
 
 #btn-submit {
-    padding: 10px 20px;
-    background-color: #4a90e2;
+    padding: 10px;
+    background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
     transition: background 0.2s;
 }
 
 #btn-submit:hover {
-    background-color: #357abd;
+    background-color: var(--primary-hover);
+}
+
+.tasks-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.filters {
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 12px;
+}
+
+.filter-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    padding: 6px 14px;
+    border-radius: 16px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.filter-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.date-filter-bar {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
 }
 
 #todo-list {
     list-style: none;
-    max-height: 300px;
+    max-height: 350px;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .todo-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px;
-    border-bottom: 1px solid #eee;
-    gap: 10px;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--card-bg);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
 }
 
-.todo-item.completed span {
+/* Barra lateral colorida de prioridade (estilo Google Agenda) */
+.todo-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+}
+
+.todo-item.priority-low::before { background-color: var(--priority-low); }
+.todo-item.priority-medium::before { background-color: var(--priority-medium); }
+.todo-item.priority-high::before { background-color: var(--priority-high); }
+
+.todo-item.completed {
+    opacity: 0.6;
+}
+
+.todo-item.completed .todo-text {
     text-decoration: line-through;
-    color: #888;
+    color: var(--text-secondary);
+}
+
+.todo-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    cursor: pointer;
 }
 
 .todo-text {
-    flex: 1;
-    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
     word-break: break-word;
+}
+
+.todo-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.todo-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .todo-actions {
     display: flex;
-    gap: 5px;
+    gap: 6px;
 }
 
 .todo-actions button {
-    padding: 5px 10px;
+    background: none;
     border: none;
-    border-radius: 3px;
+    padding: 6px;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 0.85rem;
-    color: white;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
 }
 
-.btn-edit {
-    background-color: #f0ad4e;
+.todo-actions .btn-edit:hover {
+    background-color: rgba(251, 188, 4, 0.15);
+    color: #fbbc04;
 }
 
-.btn-edit:hover {
-    background-color: #ec971f;
+.todo-actions .btn-delete:hover {
+    background-color: rgba(234, 67, 53, 0.15);
+    color: #ea4335;
 }
 
-.btn-delete {
-    background-color: #d9534f;
+.empty-state {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 30px;
+    font-size: 0.95rem;
 }
 
-.btn-delete:hover {
-    background-color: #c9302c;
+@media (max-width: 600px) {
+    .datetime-group {
+        grid-template-columns: 1fr;
+    }
 }
