@@ -3,82 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda & Tarefas | Google Calendar Style</title>
-    <!-- Link atualizado conforme sua estrutura -->
+    <title>Agenda & Tarefas | Google Calendar Pro</title>
     <link rel="stylesheet" href="/src/css/style.css">
-    <!-- Google Fonts & FontAwesome para ícones modernos -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-    <div class="app-container">
-        <!-- Cabeçalho -->
-        <header class="app-header">
-            <div class="logo-area">
-                <i class="fa-solid fa-calendar-days calendar-icon"></i>
-                <h1>Agenda & Tarefas</h1>
+    <div class="app-layout">
+        <!-- Barra Lateral com Mini Calendário -->
+        <aside class="sidebar">
+            <div class="mini-calendar">
+                <div class="calendar-header">
+                    <button id="prev-month"><i class="fa-solid fa-chevron-left"></i></button>
+                    <h3 id="month-year-display">Mês Ano</h3>
+                    <button id="next-month"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                <div class="weekdays-grid">
+                    <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+                </div>
+                <div class="days-grid" id="calendar-days">
+                    <!-- Gerado via JS -->
+                </div>
             </div>
-            <div class="header-actions">
-                <button id="theme-toggle" title="Alternar Dark Mode">
-                    <i class="fa-solid fa-moon"></i>
-                </button>
-            </div>
-        </header>
+            <button id="clear-date-filter" class="secondary-btn" style="display: none;">
+                <i class="fa-solid fa-filter-circle-xmark"></i> Ver Todas as Datas
+            </button>
+        </aside>
 
         <!-- Conteúdo Principal -->
-        <main class="main-content">
-            <!-- Formulário Estilo Evento -->
-            <section class="form-section">
-                <form id="todo-form">
-                    <input type="hidden" id="todo-id">
-                    <div class="input-group">
-                        <input type="text" id="todo-input" placeholder="Título do evento ou tarefa..." required autocomplete="off">
-                    </div>
-                    <div class="datetime-group">
-                        <div class="field">
-                            <label for="todo-date"><i class="fa-regular fa-calendar"></i> Data</label>
-                            <input type="date" id="todo-date" required>
-                        </div>
-                        <div class="field">
-                            <label for="todo-time"><i class="fa-regular fa-clock"></i> Horário</label>
-                            <input type="time" id="todo-time" required>
-                        </div>
-                        <div class="field">
-                            <label for="todo-priority"><i class="fa-solid fa-flag"></i> Prioridade</label>
-                            <select id="todo-priority">
-                                <option value="low">Baixa</option>
-                                <option value="medium" selected>Média</option>
-                                <option value="high">Alta</option>
-                            </select>
-                        </div>
-                    </div>
-                    <button type="submit" id="btn-submit">
-                        <i class="fa-solid fa-plus"></i> Adicionar Evento
+        <main class="main-container">
+            <header class="app-header">
+                <div class="logo-area">
+                    <i class="fa-solid fa-calendar-days calendar-icon"></i>
+                    <h1>Minha Agenda</h1>
+                </div>
+                <div class="header-actions">
+                    <button id="theme-toggle" title="Alternar Dark Mode">
+                        <i class="fa-solid fa-moon"></i>
                     </button>
-                </form>
-            </section>
-
-            <!-- Seção de Listagem e Filtros -->
-            <section class="tasks-section">
-                <div class="filters">
-                    <button class="filter-btn active" data-filter="all">Todas</button>
-                    <button class="filter-btn" data-filter="pending">Pendentes</button>
-                    <button class="filter-btn" data-filter="completed">Concluídas</button>
                 </div>
+            </header>
 
-                <div class="date-filter-bar">
-                    <span id="current-date-display">Carregando data...</span>
-                </div>
+            <div class="main-content">
+                <!-- Formulário -->
+                <section class="form-section">
+                    <form id="todo-form">
+                        <input type="hidden" id="todo-id">
+                        <div class="input-group">
+                            <input type="text" id="todo-input" placeholder="Título do evento ou tarefa..." required autocomplete="off">
+                        </div>
+                        <div class="datetime-group">
+                            <div class="field">
+                                <label><i class="fa-regular fa-calendar"></i> Data</label>
+                                <input type="date" id="todo-date" required>
+                            </div>
+                            <div class="field">
+                                <label><i class="fa-regular fa-clock"></i> Horário</label>
+                                <input type="time" id="todo-time" required>
+                            </div>
+                            <div class="field">
+                                <label><i class="fa-solid fa-flag"></i> Prioridade</label>
+                                <select id="todo-priority">
+                                    <option value="low">Baixa</option>
+                                    <option value="medium" selected>Média</option>
+                                    <option value="high">Alta</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label><i class="fa-solid fa-tag"></i> Categoria</label>
+                                <select id="todo-category">
+                                    <option value="Trabalho">Trabalho</option>
+                                    <option value="Estudos">Estudos</option>
+                                    <option value="Pessoal" selected>Pessoal</option>
+                                    <option value="Outros">Outros</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" id="btn-submit">
+                            <i class="fa-solid fa-plus"></i> Adicionar Evento
+                        </button>
+                    </form>
+                </section>
 
-                <ul id="todo-list">
-                    <!-- Preenchido via JavaScript -->
-                </ul>
-            </section>
+                <!-- Listagem e Filtros -->
+                <section class="tasks-section">
+                    <div class="filters">
+                        <button class="filter-btn active" data-filter="all">Todas</button>
+                        <button class="filter-btn" data-filter="pending">Pendentes</button>
+                        <button class="filter-btn" data-filter="completed">Concluídas</button>
+                    </div>
+
+                    <div class="date-filter-bar">
+                        <span id="current-date-display">Exibindo todas as tarefas</span>
+                    </div>
+
+                    <ul id="todo-list">
+                        <!-- Preenchido via JavaScript -->
+                    </ul>
+                </section>
+            </div>
         </main>
     </div>
 
-    <!-- Link atualizado conforme sua estrutura -->
     <script src="/src/js/script.js"></script>
 </body>
 </html>

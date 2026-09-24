@@ -3,6 +3,7 @@ const input = document.getElementById('todo-input');
 const dateInput = document.getElementById('todo-date');
 const timeInput = document.getElementById('todo-time');
 const priorityInput = document.getElementById('todo-priority');
+const categoryInput = document.getElementById('todo-category');
 const todoList = document.getElementById('todo-list');
 const todoIdInput = document.getElementById('todo-id');
 const btnSubmit = document.getElementById('btn-submit');
@@ -10,29 +11,36 @@ const themeToggle = document.getElementById('theme-toggle');
 const filterBtns = document.querySelectorAll('.filter-btn');
 const currentDateDisplay = document.getElementById('current-date-display');
 
+// Elementos do Mini Calendário
+const calendarDaysEl = document.getElementById('calendar-days');
+const monthYearDisplay = document.getElementById('month-year-display');
+const prevMonthBtn = document.getElementById('prev-month');
+const nextMonthBtn = document.getElementById('next-month');
+const clearDateFilterBtn = document.getElementById('clear-date-filter');
+
 let todos = JSON.parse(localStorage.getItem('todos')) || [];
 let currentFilter = 'all';
+let selectedDateFilter = null; // Guarda a data selecionada no mini calendário
 
-// Inicializar data de hoje e hora padrão nos inputs
+// Controle do Calendário Visual
+let currentDateNav = new Date();
+
 const todayStr = new Date().toISOString().split('T')[0];
 dateInput.value = todayStr;
 timeInput.value = "12:00";
 
-updateCurrentDateHeader();
-
-// Verificar Dark Mode salvo anteriormente
 if (localStorage.getItem('darkMode') === 'enabled') {
     document.body.classList.add('dark-mode');
     themeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
 }
 
+renderCalendar();
 renderTodos();
 
 // Alternar Dark Mode
 themeToggle.addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
     const isDark = document.body.classList.contains('dark-mode');
-    
     if (isDark) {
         localStorage.setItem('darkMode', 'enabled');
         themeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
@@ -42,7 +50,86 @@ themeToggle.addEventListener('click', () => {
     }
 });
 
-// Botões de Filtro
+// Navegação do Mini Calendário
+prevMonthBtn.addEventListener('click', () => {
+    currentDateNav.setMonth(currentDateNav.getMonth() - 1);
+    renderCalendar();
+});
+
+nextMonthBtn.addEventListener('click', () => {
+    currentDateNav.setMonth(currentDateNav.getMonth() + 1);
+    renderCalendar();
+});
+
+clearDateFilterBtn.addEventListener('click', () => {
+    selectedDateFilter = null;
+    clearDateFilterBtn.style.display = 'none';
+    currentDateDisplay.innerText = "Exibindo todas as tarefas";
+    renderCalendar();
+    renderTodos();
+});
+
+// Renderizar Mini Calendário Interativo
+function renderCalendar() {
+    calendarDaysEl.innerHTML = '';
+    const year = currentDateNav.getFullYear();
+    const month = currentDateNav.getMonth();
+
+    const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    monthYearDisplay.innerText = `${monthNames[month]} ${year}`;
+
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const totalDays = new Date(year, month + 1, 0).getDate();
+    const prevTotalDays = new Date(year, month, 0).getDate();
+
+    // Dias do mês anterior
+    for (let i = firstDayIndex; i > 0; i--) {
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'calendar-day inactive';
+        dayDiv.innerText = prevTotalDays - i + 1;
+        calendarDaysEl.appendChild(dayDiv);
+    }
+
+    // Dias do mês atual
+    for (let i = 1; i <= totalDays; i++) {
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'calendar-day';
+        dayDiv.innerText = i;
+
+        const formattedMonth = String(month + 1).padStart(2, '0');
+        const formattedDay = String(i).padStart(2, '0');
+        const thisDateStr = `${year}-${formattedMonth}-${formattedDay}`;
+
+        // Verificar se é hoje
+        if (thisDateStr === todayStr) {
+            dayDiv.classList.add('today');
+        }
+
+        // Verificar se está selecionado
+        if (thisDateStr === selectedDateFilter) {
+            dayDiv.classList.add('selected');
+        }
+
+        // Verificar se tem tarefas agendadas neste dia
+        const hasTask = todos.some(t => t.date === thisDateStr);
+        if (hasTask) {
+            dayDiv.classList.add('has-event');
+        }
+
+        // Clique no dia do calendário para filtrar
+        dayDiv.addEventListener('click', () => {
+            selectedDateFilter = thisDateStr;
+            clearDateFilterBtn.style.display = 'block';
+            currentDateDisplay.innerText = `Eventos em: ${formatDate(thisDateStr)}`;
+            renderCalendar();
+            renderTodos();
+        });
+
+        calendarDaysEl.appendChild(dayDiv);
+    }
+}
+
+// Botões de Filtro (Todas, Pendentes, Concluídas)
 filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
         filterBtns.forEach(b => b.classList.remove('active'));
@@ -52,7 +139,7 @@ filterBtns.forEach(btn => {
     });
 });
 
-// Adicionar ou Atualizar Tarefa (CRUD)
+// Adicionar ou Atualizar Tarefa
 form.addEventListener('submit', (e) => {
     e.preventDefault();
 
@@ -60,28 +147,28 @@ form.addEventListener('submit', (e) => {
     const date = dateInput.value;
     const time = timeInput.value;
     const priority = priorityInput.value;
+    const category = categoryInput.value;
     const id = todoIdInput.value;
 
     if (!text || !date || !time) return;
 
     if (id) {
-        // UPDATE
         todos = todos.map(todo => {
             if (todo.id == id) {
-                return { ...todo, text, date, time, priority };
+                return { ...todo, text, date, time, priority, category };
             }
             return todo;
         });
         todoIdInput.value = '';
         btnSubmit.innerHTML = '<i class="fa-solid fa-plus"></i> Adicionar Evento';
     } else {
-        // CREATE
         const newTodo = {
             id: Date.now(),
             text,
             date,
             time,
             priority,
+            category,
             completed: false
         };
         todos.push(newTodo);
@@ -98,16 +185,19 @@ function renderTodos() {
     todoList.innerHTML = '';
 
     let filteredTodos = todos.filter(todo => {
+        // Filtro por data selecionada no calendário (se houver)
+        if (selectedDateFilter && todo.date !== selectedDateFilter) return false;
+
+        // Filtro por status (Todas, Pendentes, Concluídas)
         if (currentFilter === 'pending') return !todo.completed;
         if (currentFilter === 'completed') return todo.completed;
         return true;
     });
 
-    // Ordenar cronologicamente por data e hora
     filteredTodos.sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
 
     if (filteredTodos.length === 0) {
-        todoList.innerHTML = `<li class="empty-state">Nenhum evento encontrado nesta categoria.</li>`;
+        todoList.innerHTML = `<li class="empty-state">Nenhum evento encontrado.</li>`;
         return;
     }
 
@@ -115,13 +205,12 @@ function renderTodos() {
         const li = document.createElement('li');
         li.className = `todo-item priority-${todo.priority} ${todo.completed ? 'completed' : ''}`;
 
-        const formattedDate = formatDate(todo.date);
-
         li.innerHTML = `
             <div class="todo-info" onclick="toggleComplete(${todo.id})" title="Marcar como concluída">
                 <span class="todo-text">${escapeHtml(todo.text)}</span>
                 <div class="todo-meta">
-                    <span><i class="fa-regular fa-calendar"></i> ${formattedDate}</span>
+                    <span class="category-badge">${escapeHtml(todo.category)}</span>
+                    <span><i class="fa-regular fa-calendar"></i> ${formatDate(todo.date)}</span>
                     <span><i class="fa-regular fa-clock"></i> ${todo.time}</span>
                 </div>
             </div>
@@ -152,6 +241,7 @@ function editTodo(id) {
         dateInput.value = todo.date;
         timeInput.value = todo.time;
         priorityInput.value = todo.priority;
+        categoryInput.value = todo.category || 'Pessoal';
         todoIdInput.value = todo.id;
         btnSubmit.innerHTML = '<i class="fa-solid fa-check"></i> Salvar Alteração';
         input.focus();
@@ -165,6 +255,7 @@ function deleteTodo(id) {
 
 function saveAndRender() {
     localStorage.setItem('todos', JSON.stringify(todos));
+    renderCalendar();
     renderTodos();
 }
 
@@ -173,19 +264,7 @@ function formatDate(dateStr) {
     return `${day}/${month}/${year}`;
 }
 
-function updateCurrentDateHeader() {
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    const now = new Date();
-    currentDateDisplay.innerText = "Hoje: " + now.toLocaleDateString('pt-BR', options);
-}
-
 function escapeHtml(text) {
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
     return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
