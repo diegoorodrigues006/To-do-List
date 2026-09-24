@@ -8,7 +8,7 @@ const searchInput = document.getElementById('search-input');
 const todoList = document.getElementById('todo-list');
 const todoIdInput = document.getElementById('todo-id');
 const btnSubmit = document.getElementById('btn-submit');
-const themeToggle = document.getElementById('theme-toggle');
+const themeCheckbox = document.getElementById('toggle');
 const filterBtns = document.querySelectorAll('.filter-btn');
 const currentDateDisplay = document.getElementById('current-date-display');
 
@@ -42,13 +42,16 @@ const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart
 dateInput.value = todayStr;
 timeInput.value = "12:00";
 
-applyTheme(localStorage.getItem('darkMode') === 'enabled');
+// Inicializar Tema com base no LocalStorage
+const isDarkModeSaved = localStorage.getItem('darkMode') === 'enabled';
+applyTheme(isDarkModeSaved);
 
 renderCalendar();
 renderTodos();
 
-themeToggle.addEventListener('click', () => {
-    applyTheme(!document.body.classList.contains('dark-mode'));
+// Evento do Switch Animado de Tema
+themeCheckbox.addEventListener('change', () => {
+    applyTheme(themeCheckbox.checked);
 });
 
 notificationToggle.addEventListener('click', (e) => {
@@ -180,8 +183,9 @@ function loadTodos() {
 function applyTheme(isDark) {
     document.body.classList.toggle('dark-mode', isDark);
     localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
-    themeToggle.innerHTML = `<i class="fa-solid fa-${isDark ? 'sun' : 'moon'}"></i>`;
-    themeToggle.setAttribute('aria-pressed', String(isDark));
+    if (themeCheckbox) {
+        themeCheckbox.checked = isDark;
+    }
 }
 
 function closeNotifications() {
@@ -216,7 +220,6 @@ function updateStatsAndNotifications() {
     progressBar.style.width = `${percentage}%`;
     progressText.innerText = `${percentage}% Concluído`;
 
-    // Atualizar Dropdown do Sininho com todas as tarefas pendentes gerais
     dropdownList.innerHTML = '';
     const pendingTasks = todos
         .filter(todo => !todo.completed)
@@ -245,7 +248,7 @@ function updateStatsAndNotifications() {
         `;
         dropdownList.appendChild(item);
     });
-};
+}
 
 function renderTodos() {
     todoList.innerHTML = '';
