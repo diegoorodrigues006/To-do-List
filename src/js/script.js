@@ -9,9 +9,14 @@ const todoList = document.getElementById('todo-list');
 const todoIdInput = document.getElementById('todo-id');
 const btnSubmit = document.getElementById('btn-submit');
 const themeToggle = document.getElementById('theme-toggle');
-const notificationToggle = document.getElementById('notification-toggle');
 const filterBtns = document.querySelectorAll('.filter-btn');
 const currentDateDisplay = document.getElementById('current-date-display');
+
+// Elementos do Sininho / Centro de Notificações
+const notificationToggle = document.getElementById('notification-toggle');
+const notificationDropdown = document.getElementById('notification-dropdown');
+const dropdownList = document.getElementById('dropdown-list');
+const notificationBadge = document.getElementById('notification-badge');
 
 // Elementos do Dashboard
 const statTotal = document.getElementById('stat-total');
@@ -27,80 +32,46 @@ const prevMonthBtn = document.getElementById('prev-month');
 const nextMonthBtn = document.getElementById('next-month');
 const clearDateFilterBtn = document.getElementById('clear-date-filter');
 
-let todos = JSON.parse(localStorage.getItem('todos')) || [];
+let todos = loadTodos();
 let currentFilter = 'all';
-let selectedDateFilter = null; 
-let currentDateNav = new Date();
+let selectedDateFilter = null;
+let currentDateNav = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
-const todayStr = new Date().toISOString().split('T')[0];
+const today = new Date();
+const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 dateInput.value = todayStr;
 timeInput.value = "12:00";
 
-if (localStorage.getItem('darkMode') === 'enabled') {
-    document.body.classList.add('dark-mode');
-    themeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
-}
-
-if (Notification.permission === 'granted') {
-    notificationToggle.style.color = 'var(--primary-color)';
-}
+applyTheme(localStorage.getItem('darkMode') === 'enabled');
 
 renderCalendar();
 renderTodos();
 
-notificationToggle.addEventListener('click', () => {
-    if (!('Notification' in window)) {
-        alert('Este navegador não suporta notificações de desktop.');
-        return;
-    }
-    Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-            new Notification('Agenda & Tarefas', { body: 'Notificações ativadas com sucesso!' });
-            notificationToggle.style.color = 'var(--primary-color)';
-        } else {
-            alert('Permissão de notificação negada.');
-        }
-    });
-});
-
-setInterval(() => {
-    if (Notification.permission !== 'granted') return;
-    const now = new Date();
-    const currentDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-    todos.forEach(todo => {
-        if (!todo.completed && todo.date === currentDateStr && todo.time === currentTimeStr && !todo.notified) {
-            new Notification('⏰ Lembrete de Compromisso', {
-                body: `Evento: "${todo.text}" (${todo.category}) está a começar!`,
-                icon: 'https://cdn-icons-png.flaticon.com/512/3236/3236949.png'
-            });
-            todo.notified = true;
-        }
-    });
-}, 30000);
-
 themeToggle.addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-    if (document.body.classList.contains('dark-mode')) {
-        localStorage.setItem('darkMode', 'enabled');
-        themeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
-    } else {
-        localStorage.setItem('darkMode', 'disabled');
-        themeToggle.innerHTML = '<i class="fa-solid fa-moon"></i>';
-    }
+    applyTheme(!document.body.classList.contains('dark-mode'));
 });
 
-searchInput.addEventListener('input', () => renderTodos());
+notificationToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const shouldOpen = notificationDropdown.style.display !== 'flex';
+    notificationDropdown.style.display = shouldOpen ? 'flex' : 'none';
+    notificationToggle.setAttribute('aria-expanded', String(shouldOpen));
+});
+
+document.addEventListener('click', () => {
+    closeNotifications();
+});
+
+notificationDropdown.addEventListener('click', (e) => {
+    e.stopPropagation();
+});
 
 prevMonthBtn.addEventListener('click', () => {
-    currentDateNav.setMonth(currentDateNav.getMonth() - 1);
-    renderCalendar();
+    changeMonth(-1);
 });
 
 nextMonthBtn.addEventListener('click', () => {
-    currentDateNav.setMonth(currentDateNav.getMonth() + 1);
-    renderCalendar();
+    changeMonth(1);
 });
 
 clearDateFilterBtn.addEventListener('click', () => {
@@ -162,6 +133,8 @@ filterBtns.forEach(btn => {
     });
 });
 
+searchInput.addEventListener('input', () => renderTodos());
+
 form.addEventListener('submit', (e) => {
     e.preventDefault();
 
@@ -176,7 +149,7 @@ form.addEventListener('submit', (e) => {
 
     if (id) {
         todos = todos.map(todo => {
-            if (todo.id == id) return { ...todo, text, date, time, priority, category, notified: false };
+            if (todo.id == id) return { ...todo, text, date, time, priority, category };
             return todo;
         });
         todoIdInput.value = '';
@@ -185,7 +158,7 @@ form.addEventListener('submit', (e) => {
         todos.push({
             id: Date.now(),
             text, date, time, priority, category,
-            completed: false, notified: false
+            completed: false
         });
     }
 
@@ -195,11 +168,38 @@ form.addEventListener('submit', (e) => {
     saveAndRender();
 });
 
-// NOVA FUNÇÃO: Atualiza o Dashboard dinamicamente
-function updateDashboard() {
+function loadTodos() {
+    try {
+        const storedTodos = JSON.parse(localStorage.getItem('todos') || '[]');
+        return Array.isArray(storedTodos) ? storedTodos : [];
+    } catch (error) {
+        return [];
+    }
+}
+
+function applyTheme(isDark) {
+    document.body.classList.toggle('dark-mode', isDark);
+    localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+    themeToggle.innerHTML = `<i class="fa-solid fa-${isDark ? 'sun' : 'moon'}"></i>`;
+    themeToggle.setAttribute('aria-pressed', String(isDark));
+}
+
+function closeNotifications() {
+    notificationDropdown.style.display = 'none';
+    notificationToggle.setAttribute('aria-expanded', 'false');
+}
+
+function changeMonth(monthOffset) {
+    currentDateNav = new Date(
+        currentDateNav.getFullYear(),
+        currentDateNav.getMonth() + monthOffset,
+        1
+    );
+    renderCalendar();
+}
+
+function updateStatsAndNotifications() {
     let tasksToCount = todos;
-    
-    // Se o calendário estiver filtrando uma data, o dashboard mostra o progresso só desse dia
     if (selectedDateFilter) {
         tasksToCount = todos.filter(t => t.date === selectedDateFilter);
     }
@@ -215,13 +215,41 @@ function updateDashboard() {
     
     progressBar.style.width = `${percentage}%`;
     progressText.innerText = `${percentage}% Concluído`;
-}
+
+    // Atualizar Dropdown do Sininho com todas as tarefas pendentes gerais
+    dropdownList.innerHTML = '';
+    const pendingTasks = todos
+        .filter(todo => !todo.completed)
+        .sort((first, second) =>
+            new Date(`${first.date}T${first.time}`) - new Date(`${second.date}T${second.time}`)
+        );
+    
+    if (pendingTasks.length > 0) {
+        notificationBadge.style.display = 'inline-block';
+        notificationBadge.innerText = pendingTasks.length;
+    } else {
+        notificationBadge.style.display = 'none';
+    }
+
+    if (pendingTasks.length === 0) {
+        dropdownList.innerHTML = `<div class="empty-state" style="padding: 10px; font-size: 0.8rem;">Nenhuma tarefa pendente!</div>`;
+        return;
+    }
+
+    pendingTasks.forEach(todo => {
+        const item = document.createElement('div');
+        item.className = 'dropdown-item';
+        item.innerHTML = `
+            <strong>${escapeHtml(todo.text)}</strong>
+            <span><i class="fa-regular fa-calendar"></i> ${formatDate(todo.date)} às ${escapeHtml(todo.time)} (${escapeHtml(todo.category || 'Pessoal')})</span>
+        `;
+        dropdownList.appendChild(item);
+    });
+};
 
 function renderTodos() {
     todoList.innerHTML = '';
-    
-    // Chamamos a atualização do Dashboard antes de aplicar os filtros visuais de pesquisa
-    updateDashboard();
+    updateStatsAndNotifications();
 
     const searchQuery = searchInput.value.toLowerCase().trim();
 
@@ -264,14 +292,14 @@ function renderTodos() {
 
 function toggleComplete(id) {
     todos = todos.map(todo => {
-        if (todo.id === id) return { ...todo, completed: !todo.completed };
+        if (String(todo.id) === String(id)) return { ...todo, completed: !todo.completed };
         return todo;
     });
     saveAndRender();
 }
 
 function editTodo(id) {
-    const todo = todos.find(t => t.id === id);
+    const todo = todos.find(t => String(t.id) === String(id));
     if (todo) {
         input.value = todo.text;
         dateInput.value = todo.date;
@@ -285,7 +313,7 @@ function editTodo(id) {
 }
 
 function deleteTodo(id) {
-    todos = todos.filter(t => t.id !== id);
+    todos = todos.filter(t => String(t.id) !== String(id));
     saveAndRender();
 }
 
@@ -301,6 +329,7 @@ function formatDate(dateStr) {
 }
 
 function escapeHtml(text) {
+    if (!text) return '';
     const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
 }

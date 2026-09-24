@@ -15,9 +15,9 @@
         <aside class="sidebar">
             <div class="mini-calendar">
                 <div class="calendar-header">
-                    <button id="prev-month"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button type="button" id="prev-month" aria-label="Mês anterior"><i class="fa-solid fa-chevron-left"></i></button>
                     <h3 id="month-year-display">Mês Ano</h3>
-                    <button id="next-month"><i class="fa-solid fa-chevron-right"></i></button>
+                    <button type="button" id="next-month" aria-label="Próximo mês"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
                 <div class="weekdays-grid">
                     <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
@@ -26,7 +26,7 @@
                     <!-- Gerado via JS -->
                 </div>
             </div>
-            <button id="clear-date-filter" class="secondary-btn" style="display: none;">
+            <button type="button" id="clear-date-filter" class="secondary-btn" style="display: none;">
                 <i class="fa-solid fa-filter-circle-xmark"></i> Ver Todas as Datas
             </button>
         </aside>
@@ -39,10 +39,23 @@
                     <h1>Minha Agenda</h1>
                 </div>
                 <div class="header-actions">
-                    <button id="notification-toggle" title="Ativar Notificações do Navegador">
-                        <i class="fa-solid fa-bell"></i>
-                    </button>
-                    <button id="theme-toggle" title="Alternar Dark Mode">
+                    <!-- Dropdown do Sininho (Centro de Notificações / Tarefas Pendentes) -->
+                    <div class="notification-wrapper">
+                        <button type="button" id="notification-toggle" title="Ver Tarefas Pendentes" aria-label="Ver tarefas pendentes" aria-expanded="false">
+                            <i class="fa-solid fa-bell"></i>
+                            <span id="notification-badge" class="badge" style="display: none;" aria-live="polite">0</span>
+                        </button>
+                        <div id="notification-dropdown" class="notification-dropdown" style="display: none;">
+                            <div class="dropdown-header">
+                                <h4>Tarefas Pendentes</h4>
+                            </div>
+                            <div id="dropdown-list" class="dropdown-list">
+                                <!-- Preenchido via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" id="theme-toggle" title="Alternar Dark Mode" aria-label="Alternar tema" aria-pressed="false">
                         <i class="fa-solid fa-moon"></i>
                     </button>
                 </div>
@@ -89,7 +102,7 @@
                     </form>
                 </section>
 
-                <!-- NOVO: Painel de Progresso e Estatísticas -->
+                <!-- Painel de Progresso e Estatísticas -->
                 <section class="dashboard-section">
                     <div class="stats-grid">
                         <div class="stat-card">
